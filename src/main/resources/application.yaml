@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: liteblog
+
+server:
+  port: 8080
+

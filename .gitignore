@@ -1,0 +1,17 @@
+# 构建产物
+target/
+
+# IDE 配置（每个人的本地环境不同，不进版本库）
+.idea/
+*.iml
+
+# 日志
+logs/
+*.log
+
+# 操作系统杂项
+.DS_Store
+Thumbs.db
+
+# 本地环境配置（第 10 步引入多环境时会用到）
+application-local.yaml
