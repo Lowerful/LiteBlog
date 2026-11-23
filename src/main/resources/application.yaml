@@ -21,3 +21,7 @@ logging:
   level:
     # 把 mapper 包设成 debug，控制台会打印真实执行的 SQL 和参数，排查问题必备
     com.example.blog.mapper: debug
+
+jwt:
+  # 有效期（小时）。签名密钥在 application-local.yaml 中，同样不进 Git
+  expire-hours: 72

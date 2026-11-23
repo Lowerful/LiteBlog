@@ -12,3 +12,7 @@ spring:
       connection-timeout: 3000
       # 连接有效性检测，避免拿到已断开的连接
       validation-timeout: 1000
+
+jwt:
+  # HMAC-SHA256 签名密钥：至少 32 字节的随机字符串，泄露等于任何人可以伪造登录态
+  secret: 改成一段至少32字节的随机字符串作为JWT签名密钥
