@@ -1,7 +1,23 @@
 spring:
   application:
     name: liteblog
+  # 加载本地配置（数据库账号密码等敏感信息），该文件被 .gitignore 排除，不进版本库
+  config:
+    import: optional:file:./application-local.yaml
 
 server:
   port: 8080
 
+mybatis:
+  # XML 映射文件位置（配合 mapper 接口使用，SQL 全部写在 XML 里便于维护和优化）
+  mapper-locations: classpath:mapper/*.xml
+  # 实体类包别名，XML 里 resultType 可直接写 User 而不必写全限定名
+  type-aliases-package: com.example.blog.entity
+  configuration:
+    # 数据库 user_id -> Java userId 自动映射（下划线转驼峰）
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    # 把 mapper 包设成 debug，控制台会打印真实执行的 SQL 和参数，排查问题必备
+    com.example.blog.mapper: debug
