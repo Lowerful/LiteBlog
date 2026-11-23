@@ -4,9 +4,11 @@ import com.example.blog.common.Result;
 import com.example.blog.common.ResultCode;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 /**
  * 全局异常处理器：全项目唯一一个把异常翻译成响应的地方。
@@ -40,7 +42,22 @@ public class GlobalExceptionHandler {
         return Result.fail(ResultCode.BAD_REQUEST.getCode(), message);
     }
 
-    /** 校验方法参数（@RequestParam 上的注解）失败 */
+    /**
+     * 校验 Controller 方法参数（@RequestParam / @PathVariable 上直接加约束注解）失败。
+     * 注意版本差异：Spring Framework 6.1 起控制器方法参数校验改为内置机制，
+     * 失败抛的是 HandlerMethodValidationException，不再是 ConstraintViolationException。
+     */
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public Result<Void> handleHandlerMethodValidation(HandlerMethodValidationException e) {
+        String message = e.getAllErrors().stream()
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .findFirst()
+                .orElse("请求参数错误");
+        log.info("参数校验失败: {}", message);
+        return Result.fail(ResultCode.BAD_REQUEST.getCode(), message);
+    }
+
+    /** 校验普通 Bean（非 Controller 方法参数，如 @Validated 的 Service）的入参失败 */
     @ExceptionHandler(ConstraintViolationException.class)
     public Result<Void> handleConstraintViolation(ConstraintViolationException e) {
         String message = e.getConstraintViolations().stream()
