@@ -1,6 +1,8 @@
 -- ============================================================
 -- LiteBlog 数据库初始化脚本
--- 执行方式：mysql -uroot -p < sql/schema.sql
+-- 执行方式（必须带 --default-character-set=utf8mb4，否则中文注释会乱码）：
+--   mysql -uroot -p --default-character-set=utf8mb4 < sql/schema.sql
+-- 也可以在 IDEA 数据库控制台打开本文件执行（IDEA 默认以 UTF-8 发送）
 -- 特点：可重复执行（IF NOT EXISTS），不会清掉已有数据
 -- ============================================================
 
