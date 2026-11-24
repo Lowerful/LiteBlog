@@ -11,8 +11,9 @@ server:
 mybatis:
   # XML 映射文件位置（配合 mapper 接口使用，SQL 全部写在 XML 里便于维护和优化）
   mapper-locations: classpath:mapper/*.xml
-  # 实体类包别名，XML 里 resultType 可直接写 User 而不必写全限定名
-  type-aliases-package: com.example.blog.entity
+  # 实体类包别名，XML 里 resultType 可直接写 User 而不必写全限定名。
+  # 查询导向的 Mapper 会直接返回 VO，所以 dto.response 包也要注册进来
+  type-aliases-package: com.example.blog.entity,com.example.blog.dto.response
   configuration:
     # 数据库 user_id -> Java userId 自动映射（下划线转驼峰）
     map-underscore-to-camel-case: true

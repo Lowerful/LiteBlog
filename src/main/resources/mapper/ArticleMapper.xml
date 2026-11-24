@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.blog.mapper.ArticleMapper">
+
+    <sql id="BaseColumns">
+        id, user_id, title, summary, content, status, views, created_at, updated_at
+    </sql>
+
+    <insert id="insert" parameterType="Article" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO article (user_id, title, summary, content, status)
+        VALUES (#{userId}, #{title}, #{summary}, #{content}, #{status})
+    </insert>
+
+    <select id="findById" resultType="Article">
+        SELECT
+        <include refid="BaseColumns"/>
+        FROM article
+        WHERE id = #{id}
+    </select>
+
+    <!-- 连表查详情：SELECT 里给别名字段（user_id AS authorId），
+         下划线转驼峰配置会自动处理 created_at -> createdAt -->
+    <select id="selectDetailById" resultType="ArticleVO">
+        SELECT a.id, a.title, a.summary, a.content, a.status, a.views,
+               a.user_id AS authorId, u.nickname AS authorNickname,
+               a.created_at, a.updated_at
+        FROM article a
+        JOIN `user` u ON u.id = a.user_id
+        WHERE a.id = #{id}
+    </select>
+
+    <!-- 动态条件：if 标签只在参数非空时把片段拼进 SQL。
+         where 标签会自动处理"第一个条件前的 AND"和"所有条件为空"两种情况。
+         列表固定只出已发布文章，草稿走详情接口的作者校验 -->
+    <select id="selectList" resultType="ArticleListVO">
+        SELECT a.id, a.title, a.summary, a.views,
+               a.user_id AS authorId, u.nickname AS authorNickname,
+               a.created_at
+        FROM article a
+        JOIN `user` u ON u.id = a.user_id
+        <where>
+            a.status = 'published'
+            <if test="query.keyword != null and query.keyword != ''">
+                AND (a.title LIKE CONCAT('%', #{query.keyword}, '%')
+                  OR a.summary LIKE CONCAT('%', #{query.keyword}, '%'))
+            </if>
+            <if test="query.authorId != null">
+                AND a.user_id = #{query.authorId}
+            </if>
+        </where>
+        ORDER BY a.created_at DESC, a.id DESC
+    </select>
+
+    <!-- 全量更新（与 PUT 语义对应）。updated_at 由数据库 ON UPDATE 自动维护 -->
+    <update id="update" parameterType="Article">
+        UPDATE article
+        SET title = #{title},
+            summary = #{summary},
+            content = #{content},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM article
+        WHERE id = #{id}
+    </delete>
+
+    <update id="increaseViews">
+        UPDATE article
+        SET views = views + 1
+        WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -8,7 +8,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.method.HandlerMethod;
+
+import java.util.List;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
@@ -27,12 +30,35 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
+    /**
+     * 公开的文章浏览接口（仅 GET）。
+     * 为什么不放 WebMvcConfig 的 excludePathPatterns：那里的白名单只匹配路径、
+     * 不匹配 HTTP 方法——把 /api/articles 加进去，PUT/DELETE 也一起被放行了。
+     * "同一资源路径、不同方法、不同权限"是 RESTful 的常态，只能在这里按方法判断。
+     */
+    private static final List<String> PUBLIC_GET_PATTERNS = List.of("/api/articles", "/api/articles/*");
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+
     private final JwtUtil jwtUtil;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         // 只拦截"会执行业务方法"的请求；静态资源等 handler 不是 HandlerMethod，直接放行
         if (!(handler instanceof HandlerMethod)) {
+            return true;
+        }
+
+        // 文章的浏览接口对游客开放，但要"尽力识别身份"：带了合法 token 的请求
+        // 依然装配 UserContext——"草稿仅作者可见"这类规则依赖它。
+        // 与写接口的区别：这里 token 缺失或无效不拦截，只是不设身份
+        if ("GET".equals(request.getMethod()) && isPublicArticlePath(request.getRequestURI())) {
+            String bearer = request.getHeader("Authorization");
+            if (bearer != null && bearer.startsWith(BEARER_PREFIX)) {
+                Long optionalUserId = jwtUtil.parseUserId(bearer.substring(BEARER_PREFIX.length()));
+                if (optionalUserId != null) {
+                    UserContext.setUserId(optionalUserId);
+                }
+            }
             return true;
         }
 
@@ -55,5 +81,10 @@ public class LoginInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
                                 Object handler, Exception ex) {
         UserContext.clear();
+    }
+
+    /** AntPathMatcher：Spring 自带的路径匹配器，支持 * 通配，与 @RequestMapping 用的是同一套规则 */
+    private boolean isPublicArticlePath(String uri) {
+        return PUBLIC_GET_PATTERNS.stream().anyMatch(pattern -> PATH_MATCHER.match(pattern, uri));
     }
 }

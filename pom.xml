@@ -71,6 +71,15 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- 分页插件。不用官方 starter 的原因：它只适配到 Spring Boot 3；
+             PageHelper 本体只是个 MyBatis 插件，mybatis-spring-boot-starter
+             会自动收集容器里所有 Interceptor Bean，手动注册即可 -->
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper</artifactId>
+            <version>6.1.1</version>
+        </dependency>
+
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
